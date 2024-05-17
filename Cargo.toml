@@ -1,5 +1,5 @@
 [package]
-name = "memory"
+name = "dm"
 version = "0.1.0"
 authors = ["Oliver With <oliverwith@bbv.ch>"]
 edition = "2021"
@@ -9,7 +9,7 @@ build = "build.rs"
 
 [dependencies]
 rand = "0.8"
-slint = "1.5"
+slint = "1.6"
 
 [build-dependencies]
-slint-build = "1.5"
+slint-build = "1.6"
