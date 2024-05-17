@@ -1,12 +1,13 @@
+import {  Button, TextEdit, VerticalBox } from "std-widgets.slint";
 
 
-    struct TileData {
-        image: image,
-        image_visible: bool,
-        solved: bool,
-    }
+struct TileData {
+    image: image,
+    image_visible: bool,
+    solved: bool,
+}
 
-    component MemoryTile inherits Rectangle {
+component MemoryTile inherits Rectangle {
     callback clicked;
     in property <bool> open_curtain;
     in property <bool> solved;
@@ -24,7 +25,7 @@
     }
 
     // Left curtain
-        Rectangle {
+    Rectangle {
         background: #193076;
         x: 0px;
         width: open_curtain ? 0px : (parent.width / 2);
@@ -36,7 +37,7 @@
     }
 
     // Right curtain
-        Rectangle {
+    Rectangle {
         background: #193076;
         x: open_curtain ? parent.width : (parent.width / 2);
         width: open_curtain ? 0px : (parent.width / 2);
@@ -54,7 +55,7 @@
     TouchArea {
         clicked => {
             // Delegate to the user of this element
-                root.clicked();
+            root.clicked();
         }
     }
 }
@@ -63,6 +64,11 @@ export component MainWindow inherits Window {
     width: 326px;
     height: 326px;
 
+    // callback box_edited <=> et.edited;
+    callback friss <=> friss.clicked;
+    callback text_edited(string);
+
+    in-out property <string> params: "";
     callback check_if_pair_solved();
     // Added
         in property <bool> disable_tiles;
@@ -88,11 +94,44 @@ export component MainWindow inherits Window {
         // propagate the solved status from the model to the tile
                 solved: tile.solved;
         clicked => {
-            // old: tile.image_visible = !tile.image_visible;
-                    // new:
-                    if (!root.disable_tiles) {
+            if (!root.disable_tiles) {
                 tile.image_visible = !tile.image_visible;
                 root.check_if_pair_solved();
+            }
+        }
+    }
+
+    vb := VerticalBox {
+        alignment: end;
+        Text {
+            text: "Hello World!";
+            font-size: 24px;
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: "Enter Parameters\nLine by Line";
+            font-size: 24px;
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            friss := Button {
+                text: "Friss!";
+                clicked => {
+                    root.text_edited(et.text);
+                }
+            }
+        }
+
+        et := TextEdit {
+            font-size: 14px;
+            width: parent.width;
+            height: parent.height;
+            text: root.params;
+            edited(text) => {
+                root.text_edited(text);
             }
         }
     }

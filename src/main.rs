@@ -1,27 +1,19 @@
-// slint::include_modules!();
+use std::{borrow::BorrowMut, rc::Rc, string};
 
-// fn main() -> Result<(), slint::PlatformError> {
-//     let ui = AppWindow::new()?;
-
-//     ui.on_request_increase_value({
-//         let ui_handle = ui.as_weak();
-//         move || {
-//             let ui = ui_handle.unwrap();
-//             ui.set_counter(ui.get_counter() + 1);
-//         }
-//     });
-
-//     ui.run()
-// }
-
-
+use slint::VecModel;
 
 slint::include_modules!();
+
+fn input_to_words(line: &str) -> Vec<String> {
+    line.split('\n').map(str::to_string).collect()
+  }
 
 fn main() {
     use slint::Model;
 
     let main_window = MainWindow::new().unwrap();
+
+    let input_model = Rc::new(VecModel::<String>::default());
 
     // Fetch the tiles from the model
     let mut tiles: Vec<TileData> = main_window.get_memory_tiles().iter().collect();
@@ -68,108 +60,36 @@ fn main() {
         }
     });
 
+
+
+    let mww = main_window.as_weak();
+    let im = input_model.clone();
+    main_window.on_friss(move || {
+
+
+        let thatext = mww.unwrap();
+        println!("friss clicked:\n{}", thatext.get_params());
+
+        // let im = input_model.borrow_mut();
+
+        let intermediate = input_to_words(thatext.get_params().as_str());
+
+        im.extend(intermediate);
+
+
+    });
+
+    let ui_handle = main_window.as_weak();
+    main_window.on_text_edited(move |new_text| {
+        let ui = ui_handle.unwrap();
+        ui.set_params(new_text);
+
+        println!("current text {}", ui.get_params());
+    });
+
     main_window.run().unwrap();
+
+    let bla: Vec<String> = input_model.as_ref().iter().collect();
+
+    println!("at the end of the world:\n{:?}", bla);
 }
-
-// slint::slint! {
-
-// struct TileData {
-//     image: image,
-//     image_visible: bool,
-//     solved: bool,
-// }
-
-// component MemoryTile inherits Rectangle {
-//     callback clicked;
-//     in property <bool> open_curtain;
-//     in property <bool> solved;
-//     in property <image> icon;
-
-//     height: 64px;
-//     width: 64px;
-//     background: solved ? #34CE57 : #3960D5;
-//     animate background { duration: 800ms; }
-
-//     Image {
-//         source: icon;
-//         width: parent.width;
-//         height: parent.height;
-//     }
-
-//     // Left curtain
-//     Rectangle {
-//         background: #193076;
-//         x: 0px;
-//         width: open_curtain ? 0px : (parent.width / 2);
-//         height: parent.height;
-//         animate width {
-//             duration: 250ms;
-//             easing: ease-in;
-//         }
-//     }
-
-//     // Right curtain
-//     Rectangle {
-//         background: #193076;
-//         x: open_curtain ? parent.width : (parent.width / 2);
-//         width: open_curtain ? 0px : (parent.width / 2);
-//         height: parent.height;
-//         animate width {
-//             duration: 250ms;
-//             easing: ease-in;
-//         }
-//         animate x {
-//             duration: 250ms;
-//             easing: ease-in;
-//         }
-//     }
-
-//     TouchArea {
-//         clicked => {
-//             // Delegate to the user of this element
-//             root.clicked();
-//         }
-//     }
-// }
-
-// export component MainWindow inherits Window {
-//     width: 326px;
-//     height: 326px;
-
-//     callback check_if_pair_solved();
-//     // Added
-//     in property <bool> disable_tiles;
-//     // Added
-//     in-out property <[TileData]> memory_tiles: [
-//         { image: @image-url("icons/at.png") },
-//         { image: @image-url("icons/balance-scale.png") },
-//         { image: @image-url("icons/bicycle.png") },
-//         { image: @image-url("icons/bus.png") },
-//         { image: @image-url("icons/cloud.png") },
-//         { image: @image-url("icons/cogs.png") },
-//         { image: @image-url("icons/motorcycle.png") },
-//         { image: @image-url("icons/video.png") },
-//     ];
-
-
-
-//     for tile[i] in memory_tiles : MemoryTile {
-//             x: mod(i, 4) * 74px;
-//             y: floor(i / 4) * 74px;
-//             width: 64px;
-//             height: 64px;
-//             icon: tile.image;
-//             open_curtain: tile.image_visible || tile.solved;
-//             // propagate the solved status from the model to the tile
-//             solved: tile.solved;
-//             clicked => {
-//                 // old: tile.image_visible = !tile.image_visible;
-//                 // new:
-//                 if (!root.disable_tiles) {
-//                     tile.image_visible = !tile.image_visible;
-//                     root.check_if_pair_solved();
-//                 }
-//             }
-//         }
-// }
-// }
