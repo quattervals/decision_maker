@@ -1,18 +1,35 @@
 use std::rc::Rc;
 
-use slint::VecModel;
+use rand::distributions::Standard;
+use slint::{SortModel, StandardListViewItem, VecModel};
 
 slint::include_modules!();
-
-fn input_to_words(line: &str) -> Vec<String> {
-    line.split('\n').map(str::to_string).collect()
-}
 
 fn main() {
     use slint::Model;
 
     let main_window = MainWindow::new().unwrap();
     let input_model = Rc::new(VecModel::<String>::default());
+
+    let results = Rc::new(VecModel::<StandardListViewItem>::default());
+    results.as_ref().push(StandardListViewItem::from("schni"));
+    results.as_ref().push(StandardListViewItem::from("schna"));
+    results
+        .as_ref()
+        .push(StandardListViewItem::from("schnappi"));
+    main_window.set_results(results.into());
+
+    let results2 = Rc::new(VecModel::<RS>::default());
+    results2.as_ref().push(RS {
+        name: "karl".into(),
+        score: 99,
+    });
+    results2.as_ref().push(RS {
+        name: "susi".into(),
+        score: 100,
+    });
+
+    main_window.set_results2(results2.into());
 
     let mww = main_window.as_weak();
     let im = input_model.clone();

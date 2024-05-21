@@ -1,4 +1,4 @@
-import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView } from "std-widgets.slint";
+import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView, HorizontalBox } from "std-widgets.slint";
 
 
 component EditParams inherits Rectangle {
@@ -52,28 +52,38 @@ component EditParams inherits Rectangle {
 
 component Compete inherits Rectangle { }
 
-component Results inherits StandardListView {
+component Results inherits StandardListView { }
 
-    model: [
-        { text: "Blue" },
-        { text: "Red" },
-        { text: "Green" },
-        { text: "Yellow" },
-        { text: "Black" },
-        { text: "White" },
-        { text: "Magenta" },
-        { text: "Cyan" },
-    ];
+export struct RS  {
+    name: string,
+    score: int,
+}
+component Results2 inherits ListView {
+
+    in property <[RS]> results;
+
+
+    for data in results: HorizontalBox {
+        Text {
+            text: data.name;
+        }
+
+        Text {
+            text: data.score;
+        }
+    }
 }
 
 export component MainWindow inherits Window {
     preferred-width: 400px;
-    height: 326px;
+    preferred-height: 326px;
 
     callback append;
     callback parameters_edited(string);
-    in-out property <string> parameters: "";
+    in-out property <string> parameters;
 
+    in property <[RS]> results2: [{ name: "asdf", score: 1 }, { name: "asdfdff", score: 44 }];
+    in property <[StandardListViewItem]> results;
     TabWidget {
         Tab {
             title: "Collect\nParameters";
@@ -97,8 +107,17 @@ export component MainWindow inherits Window {
         }
 
         Tab {
+            title: "Compete";
+            Results2 {
+                results: root.results2;
+            }
+        }
+
+        Tab {
             title: "Ranking";
-            Results { }
+            Results {
+                model: root.results;
+            }
         }
     }
 }
