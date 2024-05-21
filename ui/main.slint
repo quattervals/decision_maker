@@ -1,11 +1,34 @@
 import {  Button, TextEdit, VerticalBox } from "std-widgets.slint";
 
 
+component BoxWithLabel inherits GridLayout {
+    Row {
+        Text {
+            text: "label text here";
+        }
+    }
+
+    Row {
+        @children
+    }
+}
+
+export component MyApp inherits Window {
+    preferred-height: 100px;
+    BoxWithLabel {
+        Rectangle {
+            background: blue;
+        }
+
+        Rectangle {
+            background: yellow;
+        }
+    }
+}
 
 export component MainWindow inherits Window {
     width: 326px;
     height: 326px;
-
 
     callback add_parameters <=> add_parameters.clicked;
     callback parameters_edited(string);
@@ -13,7 +36,6 @@ export component MainWindow inherits Window {
 
     vb := VerticalBox {
         alignment: end;
-
 
         Text {
             text: "Enter Parameters\nLine by Line";
@@ -41,4 +63,5 @@ export component MainWindow inherits Window {
             }
         }
     }
+
 }

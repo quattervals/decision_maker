@@ -16,7 +16,7 @@ fn main() {
 
     let mww = main_window.as_weak();
     let im = input_model.clone();
-    main_window.on_add_parameters(move || {
+    main_window.on_append(move || {
         let parameters = mww.unwrap().get_parameters();
         println!("add params clicked:\n{}", parameters);
 

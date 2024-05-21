@@ -1,0 +1,104 @@
+import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView } from "std-widgets.slint";
+
+
+component EditParams inherits Rectangle {
+
+    callback append <=> append.clicked;
+    callback parameters_edited(string);
+    in-out property <string> parameters: "";
+
+    HorizontalLayout {
+
+        VerticalBox {
+
+            preferred-width: parent.width * 3 / 4;
+            Text {
+                text: "Enter Parameters";
+            }
+
+            pe := TextEdit {
+                font-size: 14px;
+
+                text: root.parameters;
+                edited(text) => {
+                    root.parameters_edited(self.text);
+                }
+            }
+        }
+
+        VerticalBox {
+            preferred-width: parent.width * 1 / 4;
+            Button {
+                text: "Show";
+            }
+
+            Button {
+                text: "Discard";
+            }
+
+            append := Button {
+                text: "Append";
+                clicked => {
+                    root.parameters_edited(pe.text);
+                }
+            }
+
+            Button {
+                text: "Play";
+            }
+        }
+    }
+}
+
+component Compete inherits Rectangle { }
+
+component Results inherits StandardListView {
+
+    model: [
+        { text: "Blue" },
+        { text: "Red" },
+        { text: "Green" },
+        { text: "Yellow" },
+        { text: "Black" },
+        { text: "White" },
+        { text: "Magenta" },
+        { text: "Cyan" },
+    ];
+}
+
+export component MainWindow inherits Window {
+    preferred-width: 400px;
+    height: 326px;
+
+    callback append;
+    callback parameters_edited(string);
+    in-out property <string> parameters: "";
+
+    TabWidget {
+        Tab {
+            title: "Collect\nParameters";
+            EditParams {
+                background: orange;
+                append => {
+                    root.append();
+                }
+                parameters_edited(bla) => {
+                    root.parameters_edited(bla);
+                }
+                parameters: root.parameters;
+            }
+        }
+
+        Tab {
+            title: "Compete";
+            Compete {
+                background: pink;
+            }
+        }
+
+        Tab {
+            title: "Ranking";
+            Results { }
+        }
+    }
+}
