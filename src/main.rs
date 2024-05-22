@@ -41,3 +41,36 @@ fn main() {
 
     println!("at the end of the program:\n{:?}", check_output);
 }
+
+fn index_pairs(matrix_size: usize) -> Vec<(usize, usize)> {
+    let mut indices = Vec::<(usize, usize)>::with_capacity(matrix_size);
+
+    for (i, j) in (0..matrix_size).flat_map(|j| (0..j).map(move |i| (i, j))) {
+        indices.push((i, j));
+    }
+    indices
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*; // import functions from outer scope
+
+    #[test]
+    fn index_generation() {
+        assert_eq!(0, index_pairs(0).len());
+        assert_eq!(0, index_pairs(1).len());
+        assert_eq!(1, index_pairs(2).len());
+        assert_eq!((0, 1), index_pairs(2)[0]);
+
+        assert_eq!(3, index_pairs(3).len());
+        assert_eq!((0, 1), index_pairs(3)[0]);
+        assert_eq!((0, 2), index_pairs(3)[1]);
+        assert_eq!((1, 2), index_pairs(3)[2]);
+
+        const HI_INDEX: usize = 8;
+        assert_eq!(
+            (HI_INDEX - 2, HI_INDEX - 1),
+            index_pairs(HI_INDEX)[((HI_INDEX * (HI_INDEX - 1)) / 2) - 1]
+        );
+    }
+}
