@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use rand::distributions::Standard;
-use slint::{SortModel, StandardListViewItem, VecModel};
+use slint::{ VecModel};
 
 slint::include_modules!();
 
@@ -20,8 +20,9 @@ fn main() {
         name: "susi".into(),
         score: 100,
     });
-
     main_window.set_results(results.into());
+
+    let mut parameter = Vec::<Parameter>::new();
 
     let mww = main_window.as_weak();
     let im = input_model.clone();
@@ -30,6 +31,12 @@ fn main() {
         println!("add params clicked:\n{}", parameters);
 
         im.extend(parameters.as_str().split('\n').map(str::to_string));
+    });
+
+    let im = input_model.clone();
+
+    main_window.on_discard(move || {
+        im.set_vec(Vec::<String>::new());
     });
 
     let mmw = main_window.as_weak();

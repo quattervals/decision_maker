@@ -6,7 +6,7 @@ export struct Parameter  {
 }
 
 component Compete inherits Rectangle {
-    in-out property <Parameter> lhs_param ;
+    in-out property <Parameter> lhs_param;
     in-out property <Parameter> rhs_param;
     // callback lhs_chosen;
     // callback rhs_chosen;
@@ -26,13 +26,13 @@ component Compete inherits Rectangle {
                     root.lhs_param.score += 1;
                     // next
                 }
-
             }
 
             Button {
                 text: root.rhs_param.name;
-                clicked => {root.rhs_param.score += 1;
-                // display next
+                clicked => {
+                    root.rhs_param.score += 1;
+                    // display next
             }
             }
         }
@@ -41,7 +41,9 @@ component Compete inherits Rectangle {
 
 component EditParams inherits Rectangle {
 
-    callback append <=> append.clicked;
+    callback discard;
+    callback append;
+
     callback parameters_edited(string);
     in-out property <string> parameters: "";
     // callback lhs_chosen;
@@ -73,12 +75,16 @@ component EditParams inherits Rectangle {
 
             Button {
                 text: "Discard";
+                clicked => {
+                    root.discard();
+                    pe.text = "";
+                }
             }
 
-            append := Button {
+            Button {
                 text: "Append";
                 clicked => {
-                    root.parameters_edited(pe.text);
+                    root.append();
                 }
             }
 
@@ -88,7 +94,6 @@ component EditParams inherits Rectangle {
         }
     }
 }
-
 
 component Results inherits ListView {
 
@@ -126,14 +131,16 @@ export component MainWindow inherits Window {
     title: "Decision Maker";
     icon: @image-url("favicon/D.png");
 
+    callback show;
+    callback discard;
     callback append;
+    callback play;
     callback parameters_edited(string);
     in-out property <string> parameters;
     in property <[Parameter]> results;
 
-    in-out property <Parameter> lhs_param: {name: "lhs"};
-    in-out property <Parameter> rhs_param: {name: "rhs"};
-
+    in-out property <Parameter> lhs_param: { name: "lhs" };
+    in-out property <Parameter> rhs_param: { name: "rhs" };
 
     VerticalBox {
         TabWidget {
@@ -141,6 +148,10 @@ export component MainWindow inherits Window {
                 title: "Collect\nParameters";
                 EditParams {
                     background: orange;
+
+                    discard => {
+                        root.discard();
+                    }
                     append => {
                         root.append();
                     }
