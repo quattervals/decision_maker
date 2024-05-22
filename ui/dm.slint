@@ -1,6 +1,16 @@
 import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView, HorizontalBox, StandardButton } from "std-widgets.slint";
 
+export struct Parameter  {
+    name: string,
+    score: int,
+}
+
 component Compete inherits Rectangle {
+    in-out property <Parameter> lhs_param ;
+    in-out property <Parameter> rhs_param;
+    // callback lhs_chosen;
+    // callback rhs_chosen;
+
 
     VerticalBox {
         Text {
@@ -11,11 +21,19 @@ component Compete inherits Rectangle {
 
         HorizontalBox {
             Button {
-                text: "This";
+                text: root.lhs_param.name;
+                clicked => {
+                    root.lhs_param.score += 1;
+                    // next
+                }
+
             }
 
             Button {
-                text: "That";
+                text: root.rhs_param.name;
+                clicked => {root.rhs_param.score += 1;
+                // display next
+            }
             }
         }
     }
@@ -26,7 +44,8 @@ component EditParams inherits Rectangle {
     callback append <=> append.clicked;
     callback parameters_edited(string);
     in-out property <string> parameters: "";
-
+    // callback lhs_chosen;
+    // callback rhs_chosen;
     HorizontalLayout {
 
         VerticalBox {
@@ -70,10 +89,7 @@ component EditParams inherits Rectangle {
     }
 }
 
-export struct Parameter  {
-    name: string,
-    score: int,
-}
+
 component Results inherits ListView {
 
     in property <[Parameter]> results;
@@ -113,8 +129,11 @@ export component MainWindow inherits Window {
     callback append;
     callback parameters_edited(string);
     in-out property <string> parameters;
-
     in property <[Parameter]> results;
+
+    in-out property <Parameter> lhs_param: {name: "lhs"};
+    in-out property <Parameter> rhs_param: {name: "rhs"};
+
 
     VerticalBox {
         TabWidget {
@@ -135,6 +154,8 @@ export component MainWindow inherits Window {
             Tab {
                 title: "Compete";
                 Compete {
+                    lhs_param: root.lhs_param;
+                    rhs_param: root.rhs_param;
                     // background: pink;
             }
             }
