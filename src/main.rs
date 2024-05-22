@@ -11,25 +11,17 @@ fn main() {
     let main_window = MainWindow::new().unwrap();
     let input_model = Rc::new(VecModel::<String>::default());
 
-    let results = Rc::new(VecModel::<StandardListViewItem>::default());
-    results.as_ref().push(StandardListViewItem::from("schni"));
-    results.as_ref().push(StandardListViewItem::from("schna"));
-    results
-        .as_ref()
-        .push(StandardListViewItem::from("schnappi"));
-    main_window.set_results(results.into());
-
-    let results2 = Rc::new(VecModel::<RS>::default());
-    results2.as_ref().push(RS {
+    let results = Rc::new(VecModel::<Parameter>::default());
+    results.as_ref().push(Parameter {
         name: "karl".into(),
         score: 99,
     });
-    results2.as_ref().push(RS {
+    results.as_ref().push(Parameter {
         name: "susi".into(),
         score: 100,
     });
 
-    main_window.set_results2(results2.into());
+    main_window.set_results(results.into());
 
     let mww = main_window.as_weak();
     let im = input_model.clone();

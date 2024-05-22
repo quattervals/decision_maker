@@ -52,15 +52,14 @@ component EditParams inherits Rectangle {
 
 component Compete inherits Rectangle { }
 
-component Results inherits StandardListView { }
 
-export struct RS  {
+export struct Parameter  {
     name: string,
     score: int,
 }
-component Results2 inherits ListView {
+component Results inherits ListView {
 
-    in property <[RS]> results;
+    in property <[Parameter]> results;
 
 
     for data in results: HorizontalBox {
@@ -82,8 +81,8 @@ export component MainWindow inherits Window {
     callback parameters_edited(string);
     in-out property <string> parameters;
 
-    in property <[RS]> results2: [{ name: "asdf", score: 1 }, { name: "asdfdff", score: 44 }];
-    in property <[StandardListViewItem]> results;
+    in property <[Parameter]> results;
+
     TabWidget {
         Tab {
             title: "Collect\nParameters";
@@ -106,17 +105,11 @@ export component MainWindow inherits Window {
             }
         }
 
-        Tab {
-            title: "Compete";
-            Results2 {
-                results: root.results2;
-            }
-        }
 
         Tab {
             title: "Ranking";
             Results {
-                model: root.results;
+                results: root.results;
             }
         }
     }
