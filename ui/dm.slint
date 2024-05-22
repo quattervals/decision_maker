@@ -41,6 +41,7 @@ component Compete inherits Rectangle {
 
 component EditParams inherits Rectangle {
 
+    callback show;
     callback discard;
     callback append;
 
@@ -71,13 +72,17 @@ component EditParams inherits Rectangle {
             preferred-width: parent.width * 1 / 4;
             Button {
                 text: "Show";
+                clicked => {
+                    root.show();
+                    pe.text = root.parameters;
+                }
             }
 
             Button {
                 text: "Discard";
                 clicked => {
                     root.discard();
-                    pe.text = "";
+                    pe.text = root.parameters;
                 }
             }
 
@@ -148,6 +153,10 @@ export component MainWindow inherits Window {
                 title: "Collect\nParameters";
                 EditParams {
                     background: orange;
+
+                    show => {
+                        root.show();
+                    }
 
                     discard => {
                         root.discard();

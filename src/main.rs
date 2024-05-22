@@ -1,9 +1,13 @@
 use std::rc::Rc;
 
 use rand::distributions::Standard;
-use slint::{ VecModel};
+use slint::{Model, SharedString, VecModel};
 
 slint::include_modules!();
+
+macro_rules! vec_of_strings {
+    ($($x:expr),*) => (vec![$($x.to_string()),*]);
+}
 
 fn main() {
     use slint::Model;
@@ -24,6 +28,25 @@ fn main() {
 
     let mut parameter = Vec::<Parameter>::new();
 
+    let mww: slint::Weak<MainWindow> = main_window.as_weak();
+    let im = input_model.clone();
+    main_window.on_show(move || {
+        sort_dedupe_clean_input(im.clone());
+
+        let mut s = SharedString::new();
+        let vec_as_string = im.as_ref().iter().collect::<Vec<String>>().join("\n");
+
+        s.push_str(&vec_as_string);
+        mww.unwrap().set_parameters(s);
+    });
+
+    let mww: slint::Weak<MainWindow> = main_window.as_weak();
+    let im = input_model.clone();
+    main_window.on_discard(move || {
+        im.set_vec(Vec::<String>::new());
+        mww.unwrap().set_parameters(SharedString::new());
+    });
+
     let mww = main_window.as_weak();
     let im = input_model.clone();
     main_window.on_append(move || {
@@ -31,12 +54,6 @@ fn main() {
         println!("add params clicked:\n{}", parameters);
 
         im.extend(parameters.as_str().split('\n').map(str::to_string));
-    });
-
-    let im = input_model.clone();
-
-    main_window.on_discard(move || {
-        im.set_vec(Vec::<String>::new());
     });
 
     let mmw = main_window.as_weak();
@@ -58,10 +75,32 @@ fn index_pairs(matrix_size: usize) -> Vec<(usize, usize)> {
     indices
 }
 
+fn sort_dedupe_clean_input(input_model: Rc<VecModel<String>>) {
+    let mut s: Vec<String> = input_model.as_ref().iter().collect();
+    s.iter_mut().for_each(|s| *s=s.trim().to_string());
+    s.sort();
+    s.retain(|i| i.ne(""));
+    s.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+    input_model.set_vec(s);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*; // import functions from outer scope
 
+    #[test]
+    fn dedupe_input_model() {
+        let inner_input_model = vec_of_strings!["b", "a", "", "a", "  ix"];
+        let input_model: Rc<VecModel<String>> = Rc::new(VecModel::<String>::default());
+        input_model.set_vec(inner_input_model);
+
+        sort_dedupe_clean_input(input_model.clone());
+
+        let inner_test_model: Vec<String> = input_model.as_ref().iter().collect();
+        assert_eq!("a", inner_test_model[0]);
+        assert_eq!("ix", inner_test_model[2]);
+        assert_eq!(3, inner_test_model.len());
+    }
     #[test]
     fn index_generation() {
         assert_eq!(0, index_pairs(0).len());
