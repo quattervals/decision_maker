@@ -44,11 +44,11 @@ component EditParams inherits Rectangle {
     callback show;
     callback discard;
     callback append;
+    callback play;
 
     callback parameters_edited(string);
     in-out property <string> parameters: "";
-    // callback lhs_chosen;
-    // callback rhs_chosen;
+
     HorizontalLayout {
 
         VerticalBox {
@@ -71,7 +71,7 @@ component EditParams inherits Rectangle {
         VerticalBox {
             preferred-width: parent.width * 1 / 4;
             Button {
-                text: "Show";
+                text: "Show consolidated";
                 clicked => {
                     root.show();
                     pe.text = root.parameters;
@@ -95,6 +95,9 @@ component EditParams inherits Rectangle {
 
             Button {
                 text: "Play";
+                clicked => {
+                    root.play();
+                }
             }
         }
     }
@@ -139,10 +142,11 @@ export component MainWindow inherits Window {
     callback show;
     callback discard;
     callback append;
-    callback play;
+    callback play() -> bool;
     callback parameters_edited(string);
     in-out property <string> parameters;
     in property <[Parameter]> results;
+    in-out property <bool> compete_visible: false;
 
     in-out property <Parameter> lhs_param: { name: "lhs" };
     in-out property <Parameter> rhs_param: { name: "rhs" };
@@ -150,6 +154,7 @@ export component MainWindow inherits Window {
     VerticalBox {
         TabWidget {
             Tab {
+
                 title: "Collect\nParameters";
                 EditParams {
                     background: orange;
@@ -157,12 +162,14 @@ export component MainWindow inherits Window {
                     show => {
                         root.show();
                     }
-
                     discard => {
                         root.discard();
                     }
                     append => {
                         root.append();
+                    }
+                    play => {
+                        root.compete_visible = root.play();
                     }
                     parameters_edited(bla) => {
                         root.parameters_edited(bla);
@@ -172,8 +179,10 @@ export component MainWindow inherits Window {
             }
 
             Tab {
+
                 title: "Compete";
                 Compete {
+                    visible: compete_visible;
                     lhs_param: root.lhs_param;
                     rhs_param: root.rhs_param;
                     // background: pink;
