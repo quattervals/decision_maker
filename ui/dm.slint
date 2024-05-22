@@ -1,5 +1,25 @@
-import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView, HorizontalBox } from "std-widgets.slint";
+import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView, HorizontalBox, StandardButton } from "std-widgets.slint";
 
+component Compete inherits Rectangle {
+
+    VerticalBox {
+        Text {
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            text: "Which one do you value higher?\nClick the corresponding button";
+        }
+
+        HorizontalBox {
+            Button {
+                text: "This";
+            }
+
+            Button {
+                text: "That";
+            }
+        }
+    }
+}
 
 component EditParams inherits Rectangle {
 
@@ -50,9 +70,6 @@ component EditParams inherits Rectangle {
     }
 }
 
-component Compete inherits Rectangle { }
-
-
 export struct Parameter  {
     name: string,
     score: int,
@@ -60,7 +77,6 @@ export struct Parameter  {
 component Results inherits ListView {
 
     in property <[Parameter]> results;
-
 
     for data in results: HorizontalBox {
         Text {
@@ -73,9 +89,26 @@ component Results inherits ListView {
     }
 }
 
+export component DdDialog inherits Dialog {
+    Rectangle {
+        HorizontalLayout {
+            spacing: 5px;
+            StandardButton {
+                kind: retry;
+            }
+
+            StandardButton {
+                kind: close;
+            }
+        }
+    }
+}
+
 export component MainWindow inherits Window {
     preferred-width: 400px;
-    preferred-height: 326px;
+    preferred-height: 400px;
+    title: "Decision Maker";
+    icon: @image-url("favicon/D.png");
 
     callback append;
     callback parameters_edited(string);
@@ -83,34 +116,39 @@ export component MainWindow inherits Window {
 
     in property <[Parameter]> results;
 
-    TabWidget {
-        Tab {
-            title: "Collect\nParameters";
-            EditParams {
-                background: orange;
-                append => {
-                    root.append();
+    VerticalBox {
+        TabWidget {
+            Tab {
+                title: "Collect\nParameters";
+                EditParams {
+                    background: orange;
+                    append => {
+                        root.append();
+                    }
+                    parameters_edited(bla) => {
+                        root.parameters_edited(bla);
+                    }
+                    parameters: root.parameters;
                 }
-                parameters_edited(bla) => {
-                    root.parameters_edited(bla);
+            }
+
+            Tab {
+                title: "Compete";
+                Compete {
+                    // background: pink;
+            }
+            }
+
+            Tab {
+                title: "Ranking";
+                Results {
+                    results: root.results;
                 }
-                parameters: root.parameters;
             }
         }
 
-        Tab {
-            title: "Compete";
-            Compete {
-                background: pink;
-            }
-        }
-
-
-        Tab {
-            title: "Ranking";
-            Results {
-                results: root.results;
-            }
+        DdDialog {
+            preferred-height: 25px;
         }
     }
 }
