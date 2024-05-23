@@ -1,4 +1,4 @@
-use std::{cell::RefCell, clone, rc::Rc};
+use std::{cell::RefCell, clone, ops::Deref, rc::Rc};
 
 use rand::{distributions::Standard, seq::index};
 use slint::{Model, SharedString, VecModel};
@@ -32,6 +32,37 @@ fn main() {
     let combination_indices: Rc<RefCell<Vec<(usize, usize)>>> =
         Rc::new(RefCell::new(Vec::<(usize, usize)>::new()));
     let index_iter = Rc::new(RefCell::new(Vec::<(usize, usize)>::new().into_iter()));
+    let current_pair: Rc<RefCell<(usize, usize)>> = Rc::new(RefCell::new((0, 0)));
+
+    let im = input_model.clone();
+    let pm = parameter.clone();
+    let ci = combination_indices.clone();
+    let ii: Rc<RefCell<std::vec::IntoIter<(usize, usize)>>> = index_iter.clone();
+    let cp = current_pair.clone();
+    let mmw = main_window.as_weak();
+    main_window.on_next_pair(move || {
+        // let lhs = mmw.unwrap().get_lhs_param();
+        // let rhs = mmw.unwrap().get_rhs_param();
+
+        let current_indices = *cp.borrow_mut();
+
+        let next_indices = ii.borrow_mut().next();
+
+        let next_indices = match next_indices {
+            Some(ix) => ix,
+            None => (0, 0),
+        };
+
+        println!("indices ({}, {})", next_indices.0, next_indices.1);
+
+        let lhs = pm.borrow().deref()[next_indices.0].clone();
+        let rhs = pm.borrow().deref()[next_indices.1].clone();
+
+        mmw.unwrap().set_lhs_param(lhs);
+        mmw.unwrap().set_rhs_param(rhs);
+
+        *cp.borrow_mut() = next_indices;
+    });
 
     let mww: slint::Weak<MainWindow> = main_window.as_weak();
     let im = input_model.clone();
@@ -63,7 +94,9 @@ fn main() {
     let im = input_model.clone();
     let pm = parameter.clone();
     let ci = combination_indices.clone();
-    let mut ii = index_iter.clone();
+    let ii = index_iter.clone();
+    let cp = current_pair.clone();
+    let mmw = main_window.as_weak();
     main_window.on_play(move || {
         sort_dedupe_clean_input(im.clone());
 
@@ -73,9 +106,23 @@ fn main() {
         ci.borrow_mut().clear();
         ci.borrow_mut().extend(index_pairs(pm.borrow().len()));
 
-        ii = Rc::new(RefCell::new(ci.borrow().clone().into_iter()));
+        let model_ok = model_ok(&pm.borrow());
 
-        model_ok(&pm.borrow())
+        //update iterator
+        *ii.borrow_mut() = ci.borrow().clone().into_iter();
+
+        let current_pair = ii.borrow_mut().next().unwrap();
+        *cp.borrow_mut() = current_pair;
+
+        let lhs = pm.borrow().deref()[current_pair.0].clone();
+        let rhs = pm.borrow().deref()[current_pair.1].clone();
+
+        mmw.unwrap().set_lhs_param(lhs);
+        mmw.unwrap().set_rhs_param(rhs);
+
+        println!("indices ({},{})", current_pair.0, current_pair.1);
+
+        return model_ok;
     });
 
     let mmw = main_window.as_weak();
@@ -124,6 +171,46 @@ fn model_ok(model: &DecisionModel) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*; // import functions from outer scope
+
+    #[test]
+    fn index_update() {
+        let combo_indices_basis: Vec<(usize, usize)> = Vec::new();
+        let combination_indices: Rc<RefCell<Vec<(usize, usize)>>> =
+            Rc::new(RefCell::new(combo_indices_basis));
+        let index_iter: Rc<RefCell<std::vec::IntoIter<(usize, usize)>>> = Rc::new(RefCell::new(
+            combination_indices.borrow().clone().into_iter(),
+        ));
+        let current_pair: Rc<RefCell<(usize, usize)>> = Rc::new(RefCell::new((0, 0)));
+
+        let ci = combination_indices.clone();
+        let ii = index_iter.clone();
+        let cp = current_pair.clone();
+
+        let play = move || {
+            ci.borrow_mut().clear();
+            ci.borrow_mut().extend(index_pairs(3));
+
+            //update iterator
+            *ii.borrow_mut() = ci.borrow().clone().into_iter();
+            let current_pair = ii.borrow_mut().next();
+            *cp.borrow_mut() = current_pair.unwrap();
+        };
+
+        let ii = index_iter.clone();
+        let cp = current_pair.clone();
+        let yielding = move || {
+            let next_indices = ii.borrow_mut().next();
+            let next_indices = match next_indices {
+                Some(ix) => ix,
+                None => (0, 0),
+            };
+            *cp.borrow_mut() = next_indices;
+        };
+
+        play();
+        yielding();
+        yielding();
+    }
 
     #[test]
     fn check_model_ok() {

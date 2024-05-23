@@ -6,11 +6,16 @@ export struct Parameter  {
 }
 
 component Compete inherits Rectangle {
-    in-out property <Parameter> lhs_param;
-    in-out property <Parameter> rhs_param;
-    // callback lhs_chosen;
-    // callback rhs_chosen;
 
+    callback next_pair;
+    /* slint can't yet do
+    in-out property <Parameter> lhs_param;
+    ...background:
+    text: root.lhs_param.name;
+    */
+    
+    in-out property <string> lhs_name;
+    in-out property <string> rhs_name;
 
     VerticalBox {
         Text {
@@ -20,20 +25,18 @@ component Compete inherits Rectangle {
         }
 
         HorizontalBox {
-            Button {
-                text: root.lhs_param.name;
+            lhs := Button {
+                text: lhs_name;
                 clicked => {
-                    root.lhs_param.score += 1;
-                    // next
+                    root.next_pair();
                 }
             }
 
-            Button {
-                text: root.rhs_param.name;
+            rhs := Button {
+                text: root.rhs_name;
                 clicked => {
-                    root.rhs_param.score += 1;
-                    // display next
-            }
+                    root.next_pair();
+                }
             }
         }
     }
@@ -144,17 +147,19 @@ export component MainWindow inherits Window {
     callback append;
     callback play() -> bool;
     callback parameters_edited(string);
+
+    callback next_pair;
+
     in-out property <string> parameters;
     in property <[Parameter]> results;
     in-out property <bool> compete_visible: false;
 
-    in-out property <Parameter> lhs_param: { name: "lhs" };
-    in-out property <Parameter> rhs_param: { name: "rhs" };
+    in-out property <Parameter> lhs_param: { name: "-" };
+    in-out property <Parameter> rhs_param: { name: "-" };
 
     VerticalBox {
         TabWidget {
             Tab {
-
                 title: "Collect\nParameters";
                 EditParams {
                     background: orange;
@@ -182,11 +187,14 @@ export component MainWindow inherits Window {
 
                 title: "Compete";
                 Compete {
+
                     visible: compete_visible;
-                    lhs_param: root.lhs_param;
-                    rhs_param: root.rhs_param;
-                    // background: pink;
-            }
+                    lhs_name: root.lhs_param.name;
+                    rhs_name: root.rhs_param.name;
+                    next_pair => {
+                        root.next_pair();
+                    }
+                }
             }
 
             Tab {
