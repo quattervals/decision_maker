@@ -4,16 +4,17 @@ export struct Parameter  {
     name: string,
     score: int,
 }
+export enum Winner{Rhs, Lhs, Undecided}
 
 component Compete inherits Rectangle {
 
-    callback next_pair;
+    callback next_pair(Winner);
     /* slint can't yet do
     in-out property <Parameter> lhs_param;
     ...background:
     text: root.lhs_param.name;
     */
-    
+
     in-out property <string> lhs_name;
     in-out property <string> rhs_name;
 
@@ -25,17 +26,17 @@ component Compete inherits Rectangle {
         }
 
         HorizontalBox {
-            lhs := Button {
-                text: lhs_name;
+            Button {
+                text: root.lhs_name;
                 clicked => {
-                    root.next_pair();
+                    root.next_pair(Winner.Lhs);
                 }
             }
 
-            rhs := Button {
+            Button {
                 text: root.rhs_name;
                 clicked => {
-                    root.next_pair();
+                    root.next_pair(Winner.Rhs);
                 }
             }
         }
@@ -148,7 +149,7 @@ export component MainWindow inherits Window {
     callback play() -> bool;
     callback parameters_edited(string);
 
-    callback next_pair;
+    callback next_pair(Winner);
 
     in-out property <string> parameters;
     in property <[Parameter]> results;
@@ -176,8 +177,8 @@ export component MainWindow inherits Window {
                     play => {
                         root.compete_visible = root.play();
                     }
-                    parameters_edited(bla) => {
-                        root.parameters_edited(bla);
+                    parameters_edited(t) => {
+                        root.parameters_edited(t);
                     }
                     parameters: root.parameters;
                 }
@@ -187,12 +188,12 @@ export component MainWindow inherits Window {
 
                 title: "Compete";
                 Compete {
-
                     visible: compete_visible;
                     lhs_name: root.lhs_param.name;
                     rhs_name: root.rhs_param.name;
-                    next_pair => {
-                        root.next_pair();
+
+                    next_pair(w) => {
+                        root.next_pair(w);
                     }
                 }
             }

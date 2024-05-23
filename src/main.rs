@@ -1,4 +1,10 @@
-use std::{cell::RefCell, clone, ops::Deref, rc::Rc};
+use std::{
+    cell::RefCell,
+    clone,
+    ops::{Deref, DerefMut},
+    rc::Rc,
+    thread::current,
+};
 
 use rand::{distributions::Standard, seq::index};
 use slint::{Model, SharedString, VecModel};
@@ -40,11 +46,20 @@ fn main() {
     let ii: Rc<RefCell<std::vec::IntoIter<(usize, usize)>>> = index_iter.clone();
     let cp = current_pair.clone();
     let mmw = main_window.as_weak();
-    main_window.on_next_pair(move || {
-        // let lhs = mmw.unwrap().get_lhs_param();
-        // let rhs = mmw.unwrap().get_rhs_param();
-
+    main_window.on_next_pair(move |winner| {
         let current_indices = *cp.borrow_mut();
+
+        match winner {
+            Winner::Lhs => {
+                pm.borrow_mut().deref_mut()[current_indices.0].score += 1;
+                println!("lhs wins");
+            }
+            Winner::Rhs => {
+                pm.borrow_mut().deref_mut()[current_indices.1].score += 1;
+                println!("rhs wins");
+            }
+            _ => {}
+        };
 
         let next_indices = ii.borrow_mut().next();
 
@@ -131,8 +146,21 @@ fn main() {
     main_window.run().unwrap();
 
     let check_output: Vec<String> = input_model.as_ref().iter().collect();
+    let mdl = parameter
+        .borrow()
+        .deref()
+        .iter()
+        .map(|n: &Parameter| n.name.to_string())
+        .collect::<Vec<String>>();
+    let scrs = parameter
+        .borrow()
+        .deref()
+        .iter()
+        .map(|s: &Parameter| s.score)
+        .collect::<Vec<i32>>();
 
     println!("at the end of the program:\n{:?}", check_output);
+    println!("model and rating\n{:?} - {:?}", mdl, scrs);
 }
 
 fn index_pairs(matrix_size: usize) -> Vec<(usize, usize)> {
