@@ -1,6 +1,6 @@
-use std::rc::Rc;
+use std::{cell::RefCell, clone, rc::Rc};
 
-use rand::distributions::Standard;
+use rand::{distributions::Standard, seq::index};
 use slint::{Model, SharedString, VecModel};
 
 slint::include_modules!();
@@ -28,7 +28,10 @@ fn main() {
     });
     main_window.set_results(results.into());
 
-    let mut parameter = DecisionModel::new();
+    let parameter = Rc::new(RefCell::new(DecisionModel::new()));
+    let combination_indices: Rc<RefCell<Vec<(usize, usize)>>> =
+        Rc::new(RefCell::new(Vec::<(usize, usize)>::new()));
+    let index_iter = Rc::new(RefCell::new(Vec::<(usize, usize)>::new().into_iter()));
 
     let mww: slint::Weak<MainWindow> = main_window.as_weak();
     let im = input_model.clone();
@@ -58,13 +61,21 @@ fn main() {
     });
 
     let im = input_model.clone();
+    let pm = parameter.clone();
+    let ci = combination_indices.clone();
+    let mut ii = index_iter.clone();
     main_window.on_play(move || {
         sort_dedupe_clean_input(im.clone());
 
-        parameter.clear();
-        parameter.extend(prepare_model(im.clone()));
+        pm.borrow_mut().clear();
+        pm.borrow_mut().extend(prepare_model(im.clone()));
 
-        model_ok(&parameter)
+        ci.borrow_mut().clear();
+        ci.borrow_mut().extend(index_pairs(pm.borrow().len()));
+
+        ii = Rc::new(RefCell::new(ci.borrow().clone().into_iter()));
+
+        model_ok(&pm.borrow())
     });
 
     let mmw = main_window.as_weak();
