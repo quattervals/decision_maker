@@ -154,6 +154,7 @@ export component MainWindow inherits Window {
     in-out property <string> parameters;
     in property <[Parameter]> results;
     in-out property <bool> compete_visible: false;
+    in-out property <bool> ranking_visible: false;
 
     in-out property <Parameter> lhs_param: { name: "-" };
     in-out property <Parameter> rhs_param: { name: "-" };
@@ -201,6 +202,7 @@ export component MainWindow inherits Window {
             Tab {
                 title: "Ranking";
                 Results {
+                    visible: ranking_visible;
                     results: root.results;
                 }
             }

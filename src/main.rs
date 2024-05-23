@@ -1,10 +1,4 @@
-use std::{
-    cell::RefCell,
-    clone,
-    ops::{Deref, DerefMut},
-    rc::Rc,
-    thread::current,
-};
+use std::{cell::RefCell, rc::Rc};
 
 use rand::{distributions::Standard, seq::index};
 use slint::{Model, SharedString, VecModel};
@@ -40,9 +34,7 @@ fn main() {
     let index_iter = Rc::new(RefCell::new(Vec::<(usize, usize)>::new().into_iter()));
     let current_pair: Rc<RefCell<(usize, usize)>> = Rc::new(RefCell::new((0, 0)));
 
-    let im = input_model.clone();
     let pm = parameter.clone();
-    let ci = combination_indices.clone();
     let ii: Rc<RefCell<std::vec::IntoIter<(usize, usize)>>> = index_iter.clone();
     let cp = current_pair.clone();
     let mmw = main_window.as_weak();
@@ -51,11 +43,11 @@ fn main() {
 
         match winner {
             Winner::Lhs => {
-                pm.borrow_mut().deref_mut()[current_indices.0].score += 1;
+                pm.borrow_mut()[current_indices.0].score += 1;
                 println!("lhs wins");
             }
             Winner::Rhs => {
-                pm.borrow_mut().deref_mut()[current_indices.1].score += 1;
+                pm.borrow_mut()[current_indices.1].score += 1;
                 println!("rhs wins");
             }
             _ => {}
@@ -68,10 +60,22 @@ fn main() {
             None => (0, 0),
         };
 
+        if next_indices == (0, 0) {
+            pm.borrow_mut().sort_by(|a, b| b.score.cmp(&a.score));
+
+            mmw.unwrap().set_ranking_visible(true);
+            mmw.unwrap().set_compete_visible(false);
+
+            let vm = Rc::new(VecModel::<Parameter>::default());
+            vm.set_vec(pm.borrow().clone());
+
+            mmw.unwrap().set_results(vm.into());
+        }
+
         println!("indices ({}, {})", next_indices.0, next_indices.1);
 
-        let lhs = pm.borrow().deref()[next_indices.0].clone();
-        let rhs = pm.borrow().deref()[next_indices.1].clone();
+        let lhs = pm.borrow()[next_indices.0].clone();
+        let rhs = pm.borrow()[next_indices.1].clone();
 
         mmw.unwrap().set_lhs_param(lhs);
         mmw.unwrap().set_rhs_param(rhs);
@@ -129,8 +133,8 @@ fn main() {
         let current_pair = ii.borrow_mut().next().unwrap();
         *cp.borrow_mut() = current_pair;
 
-        let lhs = pm.borrow().deref()[current_pair.0].clone();
-        let rhs = pm.borrow().deref()[current_pair.1].clone();
+        let lhs = pm.borrow()[current_pair.0].clone();
+        let rhs = pm.borrow()[current_pair.1].clone();
 
         mmw.unwrap().set_lhs_param(lhs);
         mmw.unwrap().set_rhs_param(rhs);
@@ -148,13 +152,11 @@ fn main() {
     let check_output: Vec<String> = input_model.as_ref().iter().collect();
     let mdl = parameter
         .borrow()
-        .deref()
         .iter()
         .map(|n: &Parameter| n.name.to_string())
         .collect::<Vec<String>>();
     let scrs = parameter
         .borrow()
-        .deref()
         .iter()
         .map(|s: &Parameter| s.score)
         .collect::<Vec<i32>>();
@@ -170,6 +172,7 @@ fn index_pairs(matrix_size: usize) -> Vec<(usize, usize)> {
         indices.push((i, j));
     }
     indices
+    //todo: shuffle indices
 }
 
 fn sort_dedupe_clean_input(input_model: Rc<VecModel<String>>) {
