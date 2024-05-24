@@ -117,7 +117,7 @@ component Results inherits Rectangle {
     }
 }
 
-export component DdDialog inherits Dialog {
+export component DdDialog inherits Rectangle {
 
     in property <bool> play_enabled: false;
     in property <bool> results_enabled: false;
@@ -193,6 +193,8 @@ export component MainWindow inherits Window {
 
         Rectangle {
 
+            preferred-height: parent.height * 4/5;
+
             EditParams {
                 visible: edit_visible;
                 background: orange;
@@ -233,7 +235,8 @@ export component MainWindow inherits Window {
         DdDialog {
             play_enabled: root.play_enabled;
             results_enabled: root.results_enabled;
-            preferred-height: 25px;
+            preferred-height: parent.height * 1/5;
+            background: slategray;
 
             play => {
                 root.dlg_play();

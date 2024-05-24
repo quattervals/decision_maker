@@ -1,6 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
 
-use rand::{distributions::Standard, seq::index};
 use slint::{Model, SharedString, VecModel};
 
 slint::include_modules!();
@@ -30,12 +29,16 @@ fn main() {
     let mw = main_window.as_weak();
     let im = input_model.clone();
     main_window.on_dlg_play(move || {
-
         pm.borrow_mut().clear();
         pm.borrow_mut().extend(prepare_model(im.clone()));
 
         ci.borrow_mut().clear();
-        ci.borrow_mut().extend(index_pairs(pm.borrow().len()));
+
+        let mut rng = rand::thread_rng();
+        let mut indices = index_pairs(pm.borrow().len());
+        rand::seq::SliceRandom::shuffle(&mut indices[..], &mut rng);
+
+        ci.borrow_mut().extend(indices);
         //update iterator
         *ii.borrow_mut() = ci.borrow().clone().into_iter();
 
@@ -43,8 +46,10 @@ fn main() {
         let current_pair = ii.borrow_mut().next().unwrap();
         *cp.borrow_mut() = Some(current_pair);
 
-        mw.unwrap().set_lhs_param(pm.borrow()[current_pair.0].clone());
-        mw.unwrap().set_rhs_param(pm.borrow()[current_pair.1].clone());
+        mw.unwrap()
+            .set_lhs_param(pm.borrow()[current_pair.0].clone());
+        mw.unwrap()
+            .set_rhs_param(pm.borrow()[current_pair.1].clone());
 
         mw.unwrap().set_edit_visible(false);
         mw.unwrap().set_compete_visible(true);
@@ -197,8 +202,8 @@ fn index_pairs(matrix_size: usize) -> Vec<(usize, usize)> {
     for (i, j) in (0..matrix_size).flat_map(|j| (0..j).map(move |i| (i, j))) {
         indices.push((i, j));
     }
+
     indices
-    //todo: shuffle indices
 }
 
 fn sort_dedupe_clean_input(input_model: Rc<VecModel<String>>) {
