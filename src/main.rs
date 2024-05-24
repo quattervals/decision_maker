@@ -28,7 +28,12 @@ fn main() {
     let ii = index_iter.clone();
     let cp = current_pair.clone();
     let mw = main_window.as_weak();
+    let im = input_model.clone();
     main_window.on_dlg_play(move || {
+
+        pm.borrow_mut().clear();
+        pm.borrow_mut().extend(prepare_model(im.clone()));
+
         ci.borrow_mut().clear();
         ci.borrow_mut().extend(index_pairs(pm.borrow().len()));
         //update iterator
