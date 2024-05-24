@@ -21,7 +21,7 @@ fn main() {
     let combination_indices: Rc<RefCell<Vec<(usize, usize)>>> =
         Rc::new(RefCell::new(Vec::<(usize, usize)>::new()));
     let index_iter = Rc::new(RefCell::new(Vec::<(usize, usize)>::new().into_iter()));
-    let current_pair: Rc<RefCell<(usize, usize)>> = Rc::new(RefCell::new((0, 0)));
+    let current_pair = Rc::new(RefCell::new(Option::<(usize, usize)>::default()));
 
     let pm = parameter.clone();
     let ci = combination_indices.clone();
@@ -36,7 +36,7 @@ fn main() {
 
         //todo: only yield when there is acutally playable parameters
         let current_pair = ii.borrow_mut().next().unwrap();
-        *cp.borrow_mut() = current_pair;
+        *cp.borrow_mut() = Some(current_pair);
 
         let lhs = pm.borrow()[current_pair.0].clone();
         let rhs = pm.borrow()[current_pair.1].clone();
@@ -55,10 +55,8 @@ fn main() {
     let pm = parameter.clone();
     let im = input_model.clone();
     main_window.on_dlg_return_edit(move || {
-
         pm.borrow_mut().clear();
         pm.borrow_mut().extend(prepare_model(im.clone()));
-
 
         mw.unwrap().set_edit_visible(true);
         mw.unwrap().set_compete_visible(false);
@@ -66,7 +64,14 @@ fn main() {
     });
 
     let mw = main_window.as_weak();
+    let pm = parameter.clone();
     main_window.on_dlg_results(move || {
+        pm.borrow_mut().sort_by(|a, b| b.score.cmp(&a.score));
+
+        let vm = Rc::new(VecModel::<Parameter>::default());
+        vm.set_vec(pm.borrow().clone());
+        mw.unwrap().set_results(vm.into());
+
         mw.unwrap().set_edit_visible(false);
         mw.unwrap().set_compete_visible(false);
         mw.unwrap().set_result_visible(true);
@@ -77,48 +82,53 @@ fn main() {
     let cp = current_pair.clone();
     let mw = main_window.as_weak();
     main_window.on_next_pair(move |winner| {
+        let next_indices = ii.borrow_mut().next();
         let current_indices = *cp.borrow_mut();
 
-        match winner {
-            Winner::Lhs => {
-                pm.borrow_mut()[current_indices.0].score += 1;
-                println!("lhs wins");
-            }
-            Winner::Rhs => {
-                pm.borrow_mut()[current_indices.1].score += 1;
-                println!("rhs wins");
+        match current_indices {
+            Some(c) => {
+                match winner {
+                    Winner::Lhs => {
+                        pm.borrow_mut()[c.0].score += 1;
+                        println!("lhs wins");
+                    }
+                    Winner::Rhs => {
+                        pm.borrow_mut()[c.1].score += 1;
+                        println!("rhs wins");
+                    }
+                    _ => {}
+                };
             }
             _ => {}
         };
 
-        let next_indices = ii.borrow_mut().next();
+        match next_indices {
+            Some(n) => {
+                println!("indices ({}, {})", n.0, n.1);
 
-        let next_indices = match next_indices {
-            Some(ix) => ix,
-            None => (0, 0),
-        };
+                let lhs = pm.borrow()[n.0].clone();
+                let rhs = pm.borrow()[n.1].clone();
 
-        if next_indices == (0, 0) {
-            pm.borrow_mut().sort_by(|a, b| b.score.cmp(&a.score));
+                mw.unwrap().set_lhs_param(lhs);
+                mw.unwrap().set_rhs_param(rhs);
 
-            mw.unwrap().set_result_visible(true);
-            mw.unwrap().set_compete_visible(false);
+                *cp.borrow_mut() = Some(n);
+            }
+            None => {
+                mw.unwrap().set_lhs_param(Parameter {
+                    name: "--".into(),
+                    score: 0,
+                });
+                mw.unwrap().set_rhs_param(Parameter {
+                    name: "--".into(),
+                    score: 0,
+                });
 
-            let vm = Rc::new(VecModel::<Parameter>::default());
-            vm.set_vec(pm.borrow().clone());
+                mw.unwrap().set_results_enabled(true);
 
-            mw.unwrap().set_results(vm.into());
+                *cp.borrow_mut() = None;
+            }
         }
-
-        println!("indices ({}, {})", next_indices.0, next_indices.1);
-
-        let lhs = pm.borrow()[next_indices.0].clone();
-        let rhs = pm.borrow()[next_indices.1].clone();
-
-        mw.unwrap().set_lhs_param(lhs);
-        mw.unwrap().set_rhs_param(rhs);
-
-        *cp.borrow_mut() = next_indices;
     });
 
     let mw = main_window.as_weak();
