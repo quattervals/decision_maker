@@ -43,11 +43,8 @@ fn main() {
         let current_pair = ii.borrow_mut().next().unwrap();
         *cp.borrow_mut() = Some(current_pair);
 
-        let lhs = pm.borrow()[current_pair.0].clone();
-        let rhs = pm.borrow()[current_pair.1].clone();
-
-        mw.unwrap().set_lhs_param(lhs);
-        mw.unwrap().set_rhs_param(rhs);
+        mw.unwrap().set_lhs_param(pm.borrow()[current_pair.0].clone());
+        mw.unwrap().set_rhs_param(pm.borrow()[current_pair.1].clone());
 
         mw.unwrap().set_edit_visible(false);
         mw.unwrap().set_compete_visible(true);
@@ -111,11 +108,8 @@ fn main() {
             Some(n) => {
                 println!("indices ({}, {})", n.0, n.1);
 
-                let lhs = pm.borrow()[n.0].clone();
-                let rhs = pm.borrow()[n.1].clone();
-
-                mw.unwrap().set_lhs_param(lhs);
-                mw.unwrap().set_rhs_param(rhs);
+                mw.unwrap().set_lhs_param(pm.borrow()[n.0].clone());
+                mw.unwrap().set_rhs_param(pm.borrow()[n.1].clone());
 
                 *cp.borrow_mut() = Some(n);
             }
