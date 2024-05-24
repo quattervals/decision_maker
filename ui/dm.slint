@@ -56,9 +56,11 @@ component EditParams inherits Rectangle {
 
         VerticalBox {
 
-            preferred-width: parent.width * 3 / 4;
+            preferred-width: parent.width * 4 / 5;
             Text {
                 text: "Enter Parameters";
+                font-size: 14px;
+                horizontal-alignment: center;
             }
 
             pe := TextEdit {
@@ -72,7 +74,7 @@ component EditParams inherits Rectangle {
         }
 
         VerticalBox {
-            preferred-width: parent.width * 1 / 4;
+            preferred-width: parent.width * 1 / 5;
             Button {
                 text: "Show consolidated";
                 clicked => {
@@ -108,10 +110,14 @@ component Results inherits Rectangle {
         for data in results: HorizontalBox {
             Text {
                 text: data.name;
+                font-size: 14px;
+                horizontal-alignment: center;
             }
 
             Text {
                 text: data.score;
+                font-size: 14px;
+                horizontal-alignment: right;
             }
         }
     }
@@ -193,7 +199,7 @@ export component MainWindow inherits Window {
 
         Rectangle {
 
-            preferred-height: parent.height * 4/5;
+            preferred-height: parent.height * 4 / 5;
 
             EditParams {
                 visible: edit_visible;
@@ -235,7 +241,7 @@ export component MainWindow inherits Window {
         DdDialog {
             play_enabled: root.play_enabled;
             results_enabled: root.results_enabled;
-            preferred-height: parent.height * 1/5;
+            preferred-height: parent.height * 1 / 5;
             background: slategray;
 
             play => {
