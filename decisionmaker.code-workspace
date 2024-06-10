@@ -5,6 +5,9 @@
 		}
 	],
 	"settings": {
-		"rust-analyzer.inlayHints.parameterHints.enable": false
+		"rust-analyzer.inlayHints.parameterHints.enable": false,
+		"github-actions.workflows.pinned.workflows": [
+			".github/workflows/rust.yml"
+		]
 	}
 }
