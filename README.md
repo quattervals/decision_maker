@@ -1,6 +1,8 @@
 # Decision Maker - Rust & Slint
 
 [![Rust CI](https://github.com/quattervals/decision_maker/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/quattervals/decision_maker/actions/workflows/rust.yml)
+[![Russian Warship Go Fuck Yourself](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/RussianWarship.svg)](https://stand-with-ukraine.pp.ua)
+
 
 ## About
 
