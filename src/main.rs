@@ -4,7 +4,6 @@ use slint::{SharedString, VecModel};
 
 slint::include_modules!();
 
-
 enum Side {
     Lhs,
     Rhs,
@@ -114,8 +113,7 @@ impl DecisionModel {
     }
 
     fn reset_score_and_indices(&self) {
-        let mut parameters: std::cell::RefMut<Vec<Parameters>> =
-            self.parameters.borrow_mut();
+        let mut parameters: std::cell::RefMut<Vec<Parameters>> = self.parameters.borrow_mut();
         parameters.iter_mut().for_each(|p| p.score = 0);
 
         if parameters.len() > 1 {
@@ -153,19 +151,14 @@ fn main() {
         mw.unwrap().set_lhs_param_name(current_pair.0.name.into());
         mw.unwrap().set_rhs_param_name(current_pair.1.name.into());
 
-        mw.unwrap().set_edit_visible(false);
-        mw.unwrap().set_compete_visible(true);
-        mw.unwrap().set_result_visible(false);
+        View::Compete.set_visible(&mw.unwrap());
     });
 
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_dialog_return_edit(move || {
         mdl.reset_score_and_indices();
-
-        mw.unwrap().set_edit_visible(true);
-        mw.unwrap().set_compete_visible(false);
-        mw.unwrap().set_result_visible(false);
+        View::Edit.set_visible(&mw.unwrap())
     });
 
     let mw = main_window.as_weak();
@@ -183,9 +176,7 @@ fn main() {
 
         mw.unwrap().set_results(vm.into());
 
-        mw.unwrap().set_edit_visible(false);
-        mw.unwrap().set_compete_visible(false);
-        mw.unwrap().set_result_visible(true);
+        View::Result.set_visible(&mw.unwrap());
     });
 
     let mw = main_window.as_weak();
@@ -217,8 +208,7 @@ fn main() {
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_show(move || {
-        mw.unwrap()
-            .set_parameters(mdl.get_parameters().into());
+        mw.unwrap().set_parameters(mdl.get_parameters().into());
     });
 
     let mw = main_window.as_weak();
@@ -265,6 +255,19 @@ fn clean_input(input: &str) -> Vec<String> {
     v = v.into_iter().map(|s| s.trim().to_string()).collect();
     v.retain(|i| i.ne(""));
     v
+}
+
+enum View {
+    Edit,
+    Compete,
+    Result,
+}
+impl View {
+    fn set_visible(&self, main_window: &MainWindow) {
+        main_window.set_edit_visible(matches!(self, View::Edit));
+        main_window.set_compete_visible(matches!(self, View::Compete));
+        main_window.set_result_visible(matches!(self, View::Result));
+    }
 }
 
 #[cfg(test)]
