@@ -1,10 +1,11 @@
 import { TabWidget, TextEdit, Button, VerticalBox, StandardTableView, ListView, StandardListView, HorizontalBox, StandardButton } from "std-widgets.slint";
 
-export struct Parameter  {
+export enum Winner{Rhs, Lhs, Undecided}
+
+struct Parameter  {
     name: string,
     score: int,
 }
-export enum Winner{Rhs, Lhs, Undecided}
 
 component Compete inherits Rectangle {
 
@@ -15,8 +16,8 @@ component Compete inherits Rectangle {
     text: root.lhs_param.name;
     */
 
-    in-out property <string> lhs_name;
-    in-out property <string> rhs_name;
+    in property <string> lhs_name;
+    in property <string> rhs_name;
 
     VerticalBox {
         Text {
@@ -175,8 +176,9 @@ export component MainWindow inherits Window {
     in-out property <string> parameters;
 
     //compete
-    in-out property <Parameter> lhs_param: { name: "-" };
-    in-out property <Parameter> rhs_param: { name: "-" };
+    in property <string> lhs_param_name:  "-";
+    in property <string> rhs_param_name:  "-";
+
     callback next_pair(Winner);
 
     //results
@@ -186,9 +188,9 @@ export component MainWindow inherits Window {
     in property <bool> play_enabled: false;
     in property <bool> results_enabled: false;
 
-    callback dlg_play;
-    callback dlg_return_edit;
-    callback dlg_results;
+    callback dialog_play;
+    callback dialog_return_edit;
+    callback dialog_results;
 
     // visibility
     in-out property <bool> edit_visible: true;
@@ -223,8 +225,8 @@ export component MainWindow inherits Window {
             Compete {
                 background: slategray;
                 visible: compete_visible;
-                lhs_name: root.lhs_param.name;
-                rhs_name: root.rhs_param.name;
+                lhs_name: root.lhs_param_name;
+                rhs_name: root.rhs_param_name;
 
                 next_pair(w) => {
                     root.next_pair(w);
@@ -245,13 +247,13 @@ export component MainWindow inherits Window {
             background: slategray;
 
             play => {
-                root.dlg_play();
+                root.dialog_play();
             }
             return_edit => {
-                root.dlg_return_edit();
+                root.dialog_return_edit();
             }
             results => {
-                root.dlg_results();
+                root.dialog_results();
             }
         }
     }

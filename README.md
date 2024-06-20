@@ -41,10 +41,10 @@ Knowing these weights helps you to fill in a [weighted decision matrix](https://
 - add sanitizers
 
 ### Business logic
-- move data types to business logic so that it is possible to test
 - show consolidated only when there are appended elements
 - no console output in release
 - no results shown when there is no game
 - save/load from file
 - option to make no decision between pairs.
+- signal and slots replacement
 
