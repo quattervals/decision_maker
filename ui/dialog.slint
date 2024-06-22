@@ -1,0 +1,42 @@
+
+import { HorizontalBox, Button } from "std-widgets.slint";
+
+export {DDialog as DecisionDialog}
+component DDialog inherits Rectangle {
+
+    in property <bool> play_enabled: false;
+    in property <bool> results_enabled: false;
+
+    callback play;
+    callback return_edit;
+    callback results;
+
+    Rectangle {
+        HorizontalBox {
+            spacing: 5px;
+            Button {
+                text: "Play";
+                enabled: play_enabled;
+                clicked => {
+                    root.play();
+                }
+            }
+
+            Button {
+                text: "Return To Edit";
+                clicked => {
+                    root.return_edit();
+                }
+            }
+
+            Button {
+                text: "Results";
+                enabled: results_enabled;
+                clicked => {
+                    root.results();
+                }
+            }
+        }
+    }
+}
+

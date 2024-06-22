@@ -1,0 +1,126 @@
+import { VerticalBox, HorizontalBox, Button, TextEdit, ListView } from "std-widgets.slint";
+
+export enum Winner{Rhs, Lhs, Undecided}
+
+export struct Parameter  {
+    name: string,
+    score: int,
+}
+
+
+export component Compete inherits Rectangle {
+
+    callback next_pair(Winner);
+    /* slint can't yet do
+    in-out property <Parameter> lhs_param;
+    ...background:
+    text: root.lhs_param.name;
+    */
+
+    in property <string> lhs_name;
+    in property <string> rhs_name;
+
+    VerticalBox {
+        Text {
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            text: "Which one do you value higher?\nClick the corresponding button";
+        }
+
+        HorizontalBox {
+            Button {
+                text: root.lhs_name;
+                clicked => {
+                    root.next_pair(Winner.Lhs);
+                }
+            }
+
+            Button {
+                text: root.rhs_name;
+                clicked => {
+                    root.next_pair(Winner.Rhs);
+                }
+            }
+        }
+    }
+}
+
+export component EditParams inherits Rectangle {
+
+    callback show;
+    callback discard;
+    callback append;
+
+    callback parameters_edited(string);
+    in-out property <string> parameters: "";
+
+    HorizontalLayout {
+
+        VerticalBox {
+
+            preferred-width: parent.width * 4 / 5;
+            Text {
+                text: "Enter Parameters";
+                font-size: 14px;
+                horizontal-alignment: center;
+            }
+
+            pe := TextEdit {
+                font-size: 14px;
+
+                text: root.parameters;
+                edited(text) => {
+                    root.parameters_edited(self.text);
+                }
+            }
+        }
+
+        VerticalBox {
+            preferred-width: parent.width * 1 / 5;
+            Button {
+                text: "Show consolidated";
+                clicked => {
+                    root.show();
+                    pe.text = root.parameters;
+                }
+            }
+
+            Button {
+                text: "Discard";
+                clicked => {
+                    root.discard();
+                    pe.text = root.parameters;
+                }
+            }
+
+            Button {
+                text: "Append";
+                clicked => {
+                    root.append();
+                }
+            }
+        }
+    }
+}
+
+export component Results inherits Rectangle {
+
+    in property <[Parameter]> results;
+
+    ListView {
+
+        for data in results: HorizontalBox {
+            Text {
+                text: data.name;
+                font-size: 14px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: data.score;
+                font-size: 14px;
+                horizontal-alignment: right;
+            }
+        }
+    }
+}
