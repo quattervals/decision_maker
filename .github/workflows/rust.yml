@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Checkout code
@@ -38,6 +38,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-ubuntu-latest
             ${{ runner.os }}-cargo-build-windows-latest
+            ${{ runner.os }}-cargo-build-macos-latest
 
       - name: Build
         run: cargo build --release
@@ -58,3 +59,9 @@ jobs:
         with:
           name: decision_maker_windows
           path: target\release\decision_maker.exe
+      - name: Upload macOS binary
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: decision_maker_macos
+          path: target/release/decision_maker
