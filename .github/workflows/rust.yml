@@ -30,6 +30,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry
 
+      - name: Set up build environment
+        if: matrix.os == 'macos-latest'
+        run: |
+          export CARGO_BUILD_TARGET="x86_64-apple-darwin"
+          rustup target add x86_64-apple-darwin
+          echo "CARGO_BUILD_TARGET=$CARGO_BUILD_TARGET" >> $GITHUB_ENV
+
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
@@ -41,7 +48,13 @@ jobs:
             ${{ runner.os }}-cargo-build-macos-latest
 
       - name: Build
-        run: cargo build --release
+        run: |
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            cargo build --target $CARGO_BUILD_TARGET --release
+          else
+            cargo build --release
+          fi
+        shell: bash
 
       - name: Run unit tests
         run: cargo test --verbose
