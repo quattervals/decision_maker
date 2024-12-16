@@ -8,10 +8,10 @@ build = "build.rs"
 
 [dependencies]
 rand = "0.8"
-slint = "1.6"
+slint = "1.8.0"
 
 [build-dependencies]
-slint-build = "1.6"
+slint-build = "1.8.0"
 
 [profile.release]
 # https://doc.rust-lang.org/cargo/reference/profiles.html
