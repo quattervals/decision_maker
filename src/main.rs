@@ -13,7 +13,7 @@ fn main() {
     let model = Rc::new(RefCell::new(DM::DecisionModel::new()));
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_dialog_play(move || {
         mdl.borrow_mut().reset_score_and_indices();
 
@@ -28,14 +28,14 @@ fn main() {
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_dialog_return_edit(move || {
         mdl.borrow_mut().reset_score_and_indices();
         View::Edit.set_visible(&mw.unwrap())
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_dialog_results(move || {
         let params = mdl.borrow_mut().sorted_by_score();
         let vm = Rc::new(VecModel::<Parameter>::default());
@@ -51,7 +51,7 @@ fn main() {
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_next_pair(move |winner| {
         let winner_side: DM::Side = match winner {
             Winner::Lhs => DM::Side::Lhs,
@@ -80,14 +80,14 @@ fn main() {
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_show(move || {
         mw.unwrap()
             .set_parameters(mdl.borrow_mut().get_parameters().into());
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_discard(move || {
         mw.unwrap().set_parameters(SharedString::new());
         mw.unwrap().set_play_enabled(false);
@@ -96,7 +96,7 @@ fn main() {
     });
 
     let mw = main_window.as_weak();
-    let mdl = model.clone();
+    let mdl = Rc::clone(&model);
     main_window.on_append(move || {
         let parameters_ui = mw.unwrap().get_parameters();
         println!("add params clicked:\n{}", parameters_ui);
