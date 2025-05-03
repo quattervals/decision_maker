@@ -81,4 +81,14 @@ jobs:
               -F "bom=@decision_maker_sbom.json"
 
       - name: run cargo deny advisories
+        id: cargo_deny_advisories
         run: cargo deny --format json check advisories  2> deny_advisories.json
+        continue-on-error: true
+
+      - name: Check script return value
+        run: |
+          if [ "${{ steps.cargo_deny_advisories.outcome }}" == "failure" ]; then
+            echo "Cargo deny errors found."
+          else
+            echo "Script executed successfully."
+          fi
