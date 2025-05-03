@@ -65,3 +65,20 @@ jobs:
         with:
           name: decision_maker_macos
           path: target/release/decision_maker
+
+      - name: install cargo security tools
+        run: cargo install cargo-deny cargo-cyclonedx
+
+      - name: generate SBOM
+        run: cargo cyclonedx --override-filename decision_maker_sbom -f json
+
+      - name: Upload SBOM to Dependency-Track
+        run: |
+          curl -X POST "http://localhost:8081/api/v1/bom" \
+              -H "Content-Type: multipart/form-data" \
+              -H "X-API-Key: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}" \
+              -F "project=${{ secrets.DEPENDENCY_TRACK_PROJECT_ID }}" \
+              -F "bom=@decision_maker_sbom.json"
+
+      - name: run cargo deny advisories
+        run: cargo deny --format json check advisories  2> deny_advisories.json
