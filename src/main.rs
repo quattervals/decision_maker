@@ -2,21 +2,22 @@ mod decision_model;
 
 use decision_model::model as DM;
 
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use slint::{SharedString, VecModel};
 slint::include_modules!();
 
 fn main() {
     let main_window = MainWindow::new().unwrap();
-    let model = Rc::new(DM::DecisionModel::new());
+    // let model = Rc::new(DM::DecisionModel::new());
+    let model = Rc::new(RefCell::new(DM::DecisionModel::new()));
 
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_dialog_play(move || {
-        mdl.reset_score_and_indices();
+        mdl.borrow_mut().reset_score_and_indices();
 
-        let current_pair = mdl.get_current_pair().unwrap();
+        let current_pair = mdl.borrow_mut().get_current_pair().unwrap();
 
         mw.unwrap()
             .set_lhs_param_name(current_pair.0.get_name_and_score().0.into());
@@ -29,14 +30,14 @@ fn main() {
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_dialog_return_edit(move || {
-        mdl.reset_score_and_indices();
+        mdl.borrow_mut().reset_score_and_indices();
         View::Edit.set_visible(&mw.unwrap())
     });
 
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_dialog_results(move || {
-        let params = mdl.sorted_by_score();
+        let params = mdl.borrow_mut().sorted_by_score();
         let vm = Rc::new(VecModel::<Parameter>::default());
 
         vm.extend(params.into_iter().map(|i| Parameter {
@@ -58,11 +59,12 @@ fn main() {
             _ => DM::Side::Other,
         };
 
-        mdl.record_score_of_current_pair(winner_side, 1);
+        mdl.borrow_mut()
+            .record_score_of_current_pair(winner_side, 1);
 
-        mdl.move_to_next_pair();
+        mdl.borrow_mut().move_to_next_pair();
 
-        match mdl.get_current_pair() {
+        match mdl.borrow_mut().get_current_pair() {
             Some(p) => {
                 mw.unwrap()
                     .set_lhs_param_name(p.0.get_name_and_score().0.into());
@@ -80,7 +82,8 @@ fn main() {
     let mw = main_window.as_weak();
     let mdl = model.clone();
     main_window.on_show(move || {
-        mw.unwrap().set_parameters(mdl.get_parameters().into());
+        mw.unwrap()
+            .set_parameters(mdl.borrow_mut().get_parameters().into());
     });
 
     let mw = main_window.as_weak();
@@ -89,7 +92,7 @@ fn main() {
         mw.unwrap().set_parameters(SharedString::new());
         mw.unwrap().set_play_enabled(false);
 
-        mdl.reset();
+        mdl.borrow_mut().reset();
     });
 
     let mw = main_window.as_weak();
@@ -99,9 +102,9 @@ fn main() {
         println!("add params clicked:\n{}", parameters_ui);
 
         let parameter_list = DM::clean_input(&parameters_ui);
-        mdl.prepare_model(&parameter_list, true);
+        mdl.borrow_mut().prepare_model(&parameter_list, true);
 
-        if mdl.is_model_ready_to_play() {
+        if mdl.borrow_mut().is_model_ready_to_play() {
             mw.unwrap().set_play_enabled(true);
         }
     });
