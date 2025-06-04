@@ -1,43 +1,48 @@
 mod decision_model;
 
 use decision_model::model as DM;
-
+use slint::{SharedString, VecModel, Weak};
 use std::{cell::RefCell, rc::Rc};
-
-use slint::{SharedString, VecModel};
 slint::include_modules!();
 
-fn main() {
-    let main_window = MainWindow::new().unwrap();
-    // let model = Rc::new(DM::DecisionModel::new());
-    let model = Rc::new(RefCell::new(DM::DecisionModel::new()));
+type ModelRef = Rc<RefCell<DM::DecisionModel>>;
 
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_dialog_play(move || {
-        mdl.borrow_mut().reset_score_and_indices();
+struct AppState {
+    model: ModelRef,
+    window: Weak<MainWindow>,
+}
 
-        let current_pair = mdl.borrow_mut().get_current_pair().unwrap();
+impl AppState {
+    fn new(window: &MainWindow) -> Self {
+        Self {
+            model: Rc::new(RefCell::new(DM::DecisionModel::new())),
+            window: window.as_weak(),
+        }
+    }
 
-        mw.unwrap()
-            .set_lhs_param_name(current_pair.0.get_name_and_score().0.into());
-        mw.unwrap()
-            .set_rhs_param_name(current_pair.1.get_name_and_score().0.into());
+    fn window(&self) -> MainWindow {
+        self.window.unwrap()
+    }
 
-        View::Compete.set_visible(&mw.unwrap());
-    });
+    fn handle_dialog_play(&self) {
+        self.model.borrow_mut().reset_score_and_indices();
 
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_dialog_return_edit(move || {
-        mdl.borrow_mut().reset_score_and_indices();
-        View::Edit.set_visible(&mw.unwrap())
-    });
+        if let Some(current_pair) = self.model.borrow_mut().get_current_pair() {
+            self.window()
+                .set_lhs_param_name(current_pair.0.get_name_and_score().0.into());
+            self.window()
+                .set_rhs_param_name(current_pair.1.get_name_and_score().0.into());
+            View::Compete.set_visible(&self.window());
+        }
+    }
 
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_dialog_results(move || {
-        let params = mdl.borrow_mut().sorted_by_score();
+    fn handle_dialog_return_edit(&self) {
+        self.model.borrow_mut().reset_score_and_indices();
+        View::Edit.set_visible(&self.window());
+    }
+
+    fn handle_dialog_results(&self) {
+        let params = self.model.borrow_mut().sorted_by_score();
         let vm = Rc::new(VecModel::<Parameter>::default());
 
         vm.extend(params.into_iter().map(|i| Parameter {
@@ -45,72 +50,109 @@ fn main() {
             score: i.get_name_and_score().1 as i32,
         }));
 
-        mw.unwrap().set_results(vm.into());
+        self.window().set_results(vm.into());
+        View::Result.set_visible(&self.window());
+    }
 
-        View::Result.set_visible(&mw.unwrap());
-    });
-
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_next_pair(move |winner| {
-        let winner_side: DM::Side = match winner {
+    fn handle_next_pair(&self, winner: Winner) {
+        let winner_side = match winner {
             Winner::Lhs => DM::Side::Lhs,
             Winner::Rhs => DM::Side::Rhs,
             _ => DM::Side::Other,
         };
 
-        mdl.borrow_mut()
+        self.model
+            .borrow_mut()
             .record_score_of_current_pair(winner_side, 1);
+        self.model.borrow_mut().move_to_next_pair();
 
-        mdl.borrow_mut().move_to_next_pair();
-
-        match mdl.borrow_mut().get_current_pair() {
+        match self.model.borrow_mut().get_current_pair() {
             Some(p) => {
-                mw.unwrap()
+                self.window()
                     .set_lhs_param_name(p.0.get_name_and_score().0.into());
-                mw.unwrap()
+                self.window()
                     .set_rhs_param_name(p.1.get_name_and_score().0.into());
             }
             None => {
-                mw.unwrap().set_lhs_param_name("--".into());
-                mw.unwrap().set_rhs_param_name("--".into());
-                mw.unwrap().set_results_enabled(true);
+                self.window().set_lhs_param_name("--".into());
+                self.window().set_rhs_param_name("--".into());
+                self.window().set_results_enabled(true);
             }
         }
-    });
+    }
 
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_show(move || {
-        mw.unwrap()
-            .set_parameters(mdl.borrow_mut().get_parameters().into());
-    });
+    fn handle_show(&self) {
+        self.window()
+            .set_parameters(self.model.borrow_mut().get_parameters().into());
+    }
 
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_discard(move || {
-        mw.unwrap().set_parameters(SharedString::new());
-        mw.unwrap().set_play_enabled(false);
+    fn handle_discard(&self) {
+        self.window().set_parameters(SharedString::new());
+        self.window().set_play_enabled(false);
+        self.model.borrow_mut().reset();
+    }
 
-        mdl.borrow_mut().reset();
-    });
-
-    let mw = main_window.as_weak();
-    let mdl = Rc::clone(&model);
-    main_window.on_append(move || {
-        let parameters_ui = mw.unwrap().get_parameters();
+    fn handle_append(&self) {
+        let parameters_ui = self.window().get_parameters();
         println!("add params clicked:\n{}", parameters_ui);
 
         let parameter_list = DM::clean_input(&parameters_ui);
-        mdl.borrow_mut().prepare_model(&parameter_list, true);
+        self.model.borrow_mut().prepare_model(&parameter_list, true);
 
-        if mdl.borrow_mut().is_model_ready_to_play() {
-            mw.unwrap().set_play_enabled(true);
+        if self.model.borrow_mut().is_model_ready_to_play() {
+            self.window().set_play_enabled(true);
         }
-    });
+    }
 
-    let mw = main_window.as_weak();
-    main_window.on_parameters_edited(move |new_text| mw.unwrap().set_parameters(new_text));
+    fn handle_parameters_edited(&self, new_text: SharedString) {
+        self.window().set_parameters(new_text);
+    }
+}
+
+fn main() {
+    let main_window = MainWindow::new().unwrap();
+    let app_state = Rc::new(AppState::new(&main_window));
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_dialog_play(move || app_state.handle_dialog_play());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_dialog_return_edit(move || app_state.handle_dialog_return_edit());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_dialog_results(move || app_state.handle_dialog_results());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_next_pair(move |winner| app_state.handle_next_pair(winner));
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_show(move || app_state.handle_show());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_discard(move || app_state.handle_discard());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window.on_append(move || app_state.handle_append());
+    }
+
+    {
+        let app_state = app_state.clone();
+        main_window
+            .on_parameters_edited(move |new_text| app_state.handle_parameters_edited(new_text));
+    }
 
     main_window.run().unwrap();
 }
@@ -120,6 +162,7 @@ enum View {
     Compete,
     Result,
 }
+
 impl View {
     fn set_visible(&self, main_window: &MainWindow) {
         main_window.set_edit_visible(matches!(self, View::Edit));
